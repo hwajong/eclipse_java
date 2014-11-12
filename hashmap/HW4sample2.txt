@@ -1,0 +1,77 @@
+Suppose the file HW4urls2.txt (see linked file) contains
+
+alpha.com
+beta.org
+gamma.com
+delta.com
+epsilon.net
+alpha.org
+alpha.org/try
+gamma.com
+gamma.com/help
+www.delta.com
+alpha.com
+https://www.alpha.com/ecommerce/shopping.asp
+http://www.delta.com/contactus/pages/comment_complaint/index.jsp
+epsilon.net/images
+alpha.org
+epsilon.net/cgi-bin/
+alpha.org
+epsilon.net
+
+
+
+When the program is launched as follows, one sample execution could look like
+this, where the initial $ is the command prompt where the user launches the
+program from the command line with first argument 2 and second argument urls1.txt
+(of course, if launching from an IDE, you set the command line arguments in a different way):
+
+[***NOTE: there is no requirement on the order of appearance of the top k domains
+in any report.  As long as you have the correct k domains in each report, their
+relative ordering in the output is irrelevant. ***]
+
+
+$ java DomainTally 3 HW4urls2.txt
+
+Processing the file HW4urls2.txt...
+
+REPORT: After collecting 8 URLs total, the top 3 domains are:
+alpha.com
+gamma.com
+alpha.org
+
+REPORT: After collecting 10 URLs total, the top 3 domains are:
+gamma.com
+delta.com
+alpha.org
+
+REPORT: After collecting 12 URLs total, the top 3 domains are:
+alpha.com
+gamma.com
+alpha.org
+
+REPORT: After collecting 15 URLs total, the top 3 domains are:
+alpha.com
+gamma.com
+delta.com
+
+REPORT: After collecting 17 URLs total, the top 3 domains are:
+alpha.com
+gamma.com
+alpha.org
+
+File processing complete, beginning interactive stage.
+
+-=-=-=-=-=-=-
+
+You can enter an additional URL to process, 'report' to see the top 2, or 'quit'.
+What now (a url, 'report', or 'quit')? report
+
+REPORT: After collecting 18 URLs total, the top 3 domains are:
+gamma.com
+epsilon.net
+alpha.org
+
+What now (a url, 'report', or 'quit')? quit
+
+Goodbye.

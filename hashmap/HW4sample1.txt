@@ -1,0 +1,77 @@
+Suppose the file HW4urls1.txt (see linked file) contains
+
+https://www.google.com/?gws_rd=ssl
+http://www.cs.jhu.edu/news-events/news-articles/
+maps.google.com
+http://www.cnn.com/WORLD/?hpt=sitenav
+http://www.cnn.com/JUSTICE/?hpt=sitenav
+report
+http://www.cs.jhu.edu/course-info/
+report
+http://e-catalog.jhu.edu/departments-program-requirements-and-courses/engineering/computer-science/
+http://docs.oracle.com/javase/7/docs/api/java/util/PriorityQueue.html
+report
+http://mexico.cnn.com/?hpt=ed_Mexico
+report
+cnn.com
+report
+
+
+When the program is launched as follows, one sample execution could look like
+this, where the initial $ is the command prompt where the user launches the
+program from the command line with first argument 2 and second argument urls1.txt
+(of course, if launching from an IDE, you set the command line arguments in a different way):
+
+
+
+
+$ java DomainTally 2 HW4urls1.txt
+
+Processing the file HW4urls1.txt...
+
+REPORT: After collecting 5 URLs total, the top 2 domains are:
+cnn.com
+google.com
+
+REPORT: After collecting 6 URLs total, the top 2 domains are:
+cnn.com
+google.com
+
+REPORT: After collecting 8 URLs total, the top 2 domains are:
+google.com
+jhu.edu
+
+REPORT: After collecting 9 URLs total, the top 2 domains are:
+google.com
+jhu.edu
+
+REPORT: After collecting 10 URLs total, the top 2 domains are:
+jhu.edu
+cnn.com
+
+File processing complete, beginning interactive stage.
+
+-=-=-=-=-=-=-
+
+You can enter an additional URL to process, 'report' to see the top 2, or 'quit'.
+What now (a url, 'report', or 'quit')? report
+
+REPORT: After collecting 10 URLs total, the top 2 domains are:
+jhu.edu
+cnn.com
+
+What now (a url, 'report', or 'quit')? http://docs.oracle.com/javase/7/docs/api/java/util/HashMap.html
+
+What now (a url, 'report', or 'quit')? http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html
+
+What now (a url, 'report', or 'quit')? www.cnn.com
+
+What now (a url, 'report', or 'quit')? report
+
+REPORT: After collecting 13 URLs total, the top 2 domains are:
+jhu.edu
+cnn.com
+
+What now (a url, 'report', or 'quit')? quit
+
+Goodbye.
