@@ -1,6 +1,7 @@
 import java.applet.AudioClip;
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.Point;
@@ -8,9 +9,15 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
+import java.util.TreeMap;
 
 import javax.swing.ImageIcon;
 import javax.swing.JApplet;
@@ -35,8 +42,9 @@ public class App {
 	
 	JLabel lbUserId = new JLabel("User ID");
 	JTextField tfUserId = new JTextField(5);   // user id
-	JButton btMenual = new JButton("메뉴얼"); // 시작버튼
-	JButton btStart = new JButton("시작");   // 시작버튼
+	JButton btMenual = new JButton("메뉴얼"); 
+	JButton btStart = new JButton("시작");   
+	JButton btRank = new JButton("랭킹");    
 	
 	int score = 0;
 	int level = 0;
@@ -44,10 +52,12 @@ public class App {
 	// 버튼 토글을 위한 비트 연산에 사용될 상수들
 	private final int START = 1;
 	private final int MANUAL = 2;
+	private final int RANK = 4;
 
 	
 	JLayeredPane lp = new JLayeredPane(); // 화면을 여러장 겹치기 위한 PaneL 레이어
 	
+	RankPanel rankPanel; // ranking
 	GamePanel gamePanel; // 게임이 이루질 패널
 	int gamePanelWidth, gamePanelHeight; // 실제 게임이 이루어질 영역의 크기
 	
@@ -75,10 +85,14 @@ public class App {
 		controlPanel.add(tfUserId);
 		controlPanel.add(btMenual);
 		controlPanel.add(btStart);
+		controlPanel.add(btRank);
 		
 		// 게임의 진행이 디스플레이 될 패널
 		gamePanel = new GamePanel();
 		gamePanel.setBounds(0, 0, WIN_WIDTH, WIN_HEIGHT);
+		
+		rankPanel = new RankPanel();
+		rankPanel.setBounds(0, 0, WIN_WIDTH, WIN_HEIGHT);
 		
 		coverPanel = new coverPanel();
 		coverPanel.setBounds(0, 0, WIN_WIDTH, WIN_HEIGHT);
@@ -89,6 +103,7 @@ public class App {
 		lp.add(coverPanel, new Integer(0));
 		lp.add(menualPanel, new Integer(0));
 		lp.add(gamePanel, new Integer(0));
+		lp.add(rankPanel, new Integer(0));
 		
 		timerClock = new Timer(1000, new ClockListner());
 		timerAnim = new Timer(10, new AnimeListener()); // 그림의 이동을 처리하기 위한 리스너
@@ -99,6 +114,7 @@ public class App {
 		// 버튼 리스너의 설치
 		btMenual.addActionListener(new MenualListener());
 		btStart.addActionListener(new StartListener());
+		btRank.addActionListener(new RankListener());
 		gamePanel.addKeyListener(new DirectionListener()); // 키보드 리스너 설치
 		tfUserId.addKeyListener(new UserInputListener());
 		
@@ -151,6 +167,85 @@ public class App {
 		}
 	}
 	
+	@SuppressWarnings("serial")
+	class RankPanel extends JPanel {
+		
+		TreeMap<Integer, String> rankingMap = new TreeMap<Integer, String>();
+		
+		public RankPanel() {
+			rankingMap.clear();
+		}
+		
+		public void bid(boolean addNew) {
+			// read score data from file
+			try {
+				Scanner file = new Scanner(new File("rank.dat"));
+				String line;
+				while (file.hasNext()) {
+					line = file.nextLine();
+					//System.out.println(line);
+					String[] strs = line.split("@@@");
+					// System.out.println(strs[0]);
+					// System.out.println(strs[1]);
+					rankingMap.put(Integer.parseInt(strs[1]), strs[0]);
+				}
+				file.close();
+			} catch (FileNotFoundException e1) {
+				//e1.printStackTrace();
+			}
+			
+			if(addNew) {
+				rankingMap.put(score, tfUserId.getText());	
+			}
+			
+			// save score data to file
+			try {
+				FileWriter outFile = new FileWriter(new File("rank.dat"));
+				int count = 0;
+				for(Integer score : rankingMap.descendingKeySet()) {
+					String userId = rankingMap.get(score);
+					outFile.write(userId + "@@@" + score.toString() + "굈");
+					if(++count >= 10) break; // 상위 10개만 저장 
+				}
+				outFile.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		public void paintComponent(Graphics g) {
+			g.setColor(Color.white);
+			g.fillRect(0, 0, this.getWidth(), this.getHeight()); // 화면 지우기
+
+			player.draw(g, this);
+						
+			levelShape.draw(g);
+			scoreShape.draw(g);
+			
+			g.setFont(new Font("TimesRoman", Font.BOLD, 40));
+		    g.setColor(Color.black);
+		    int x = 100;
+		    int y = 80;
+		    
+		    g.drawString("Rank     Name     Score", x, y);
+		    
+		    int rank = 1;
+		    for(Integer score : rankingMap.descendingKeySet()) {
+		    	String userId = rankingMap.get(score);
+		    	x = 115;
+		    	y += 50;
+		    	g.drawString(String.format("%-2d.", rank), x, y);
+		    	x = 245;
+		    	g.drawString(String.format("%-10s", userId), x, y);
+		    	x = 400;
+		    	g.drawString(String.format("%-10d", score.intValue()), x, y);
+		    	rank++;
+		    	if(rank > 10) break; // 랭킹 10개만 표시 
+		    }
+		}
+		
+	}
+	
 	private void makeBall() {
 		URL imgURL = getClass().getResource("ball.png");
 		int ballSize = 10;
@@ -166,12 +261,14 @@ public class App {
 	private void buttonOn(int flags) {
 		if ((flags & START) == START) btStart.setEnabled(true);
 		if ((flags & MANUAL) == MANUAL) btMenual.setEnabled(true);
+		if ((flags & RANK) == RANK) btRank.setEnabled(true);
 	}
 
 	
 	private void buttonOff(int flags) {
 		if ((flags & START) == START) btStart.setEnabled(false);
 		if ((flags & MANUAL) == MANUAL) btMenual.setEnabled(false);
+		if ((flags & RANK) == RANK) btRank.setEnabled(false);
 	}
 	
 	
@@ -181,18 +278,37 @@ public class App {
 		timerClock.stop(); // 시간 디스플에이 멈춤
 		timerAnim.stop(); // 그림객체 움직임 멈춤
 		gamePanel.setFocusable(false); // 포커싱 안되게 함(즉 키 안먹음)
+		buttonOn(START);
+		
+		try {
+			Thread.sleep(3000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		
+		rankPanel.bid(true);
+		lp.moveToFront(rankPanel);
+		buttonOn(MANUAL);
 	}
 
 
 	// 시작 버튼의 감청자
 	class StartListener implements ActionListener {
 		public void actionPerformed(ActionEvent e) {
+			buttonOff(RANK);
 			lp.moveToFront(gamePanel);
 			gamePanel.setDoubleBuffered(true);
 			gamePanel.setFocusable(true); // gamePanel이 포커싱될 수 있게 함
 			gamePanel.requestFocus(); // 포커싱을 맞춰줌(이것 반드시 필요)
+			
+			level = 0;
+			levelShape.setString("LV: 0");
+			
+			score = 0;
+			scoreShape.setString("Score: 0");
+			
+			ballList.clear();
 
-			//backgroundSound.play(); // 배경음악 시작
 			backgroundSound.loop();
 			timerClock.start();
 			timerAnim.start(); // 그림객체 움직임을 위한 시작
@@ -208,6 +324,14 @@ public class App {
 	class MenualListener implements ActionListener {
 		public void actionPerformed(ActionEvent e) {
 			lp.moveToFront(menualPanel);
+			buttonOn(RANK);
+		}
+	}
+	
+	class RankListener implements ActionListener {
+		public void actionPerformed(ActionEvent e) {
+			rankPanel.bid(false);
+			lp.moveToFront(rankPanel);
 		}
 	}
 	
@@ -239,7 +363,7 @@ public class App {
 			
 			// 만약 충돌하였으면 충돌의 효과음 나타내고 타이머를 중단시킴
 			for (Shape s : ballList) {
-				if (s.collide(new Point(player.x, (int)player.y))) {
+				if (s.collide(new Point((int)player.x, (int)player.y))) {
 					boomSound.play(); // 충돌의 음향
 					finishGame(); // 게임 중단
 					return;
@@ -252,13 +376,14 @@ public class App {
 			}
 			
 			// 점수 계산
-			int x_min = player.getX() - 10;
+			int x_min = (int)(player.getX() - 10);
 			if(x_min < 0) x_min = 0;
-			int x_max = player.getX() + 10;
+			int x_max = (int)(player.getX() + 10);
 			if(x_max > WIN_WIDTH) x_max = WIN_WIDTH;
 			for (Shape s : ballList) {
 				if(s.getX() >= x_min && s.getX() <= x_max) {
-					scoreShape.setString("Score: " + ++score);
+					score += 10;
+					scoreShape.setString("Score: " + score);
 				}
 			}
 						
@@ -296,7 +421,7 @@ public class App {
 					player.x -= steps;
 				break;
 			case KeyEvent.VK_RIGHT:
-				if (player.x <= gamePanelWidth)
+				if (player.x <= gamePanelWidth-30)
 					player.x += steps;
 				break;
 			}

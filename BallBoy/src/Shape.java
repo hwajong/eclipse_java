@@ -8,7 +8,7 @@ import java.awt.*;
 
 @SuppressWarnings("serial")
 public class Shape extends ImageIcon {
-	public int x;				// 모양의 위치 좌표
+	public double x;				// 모양의 위치 좌표
 	public double y;				// 모양의 위치 좌표
 	private int initX, initY; 	// 초기시작 x, y좌표
 	protected int xDirection;
@@ -41,8 +41,6 @@ public class Shape extends ImageIcon {
 	// 시작 위치를 임의의 포인트로 주는 구성자
 	public Shape(URL imgURL, int margin, int steps, int xBoundary, int yBoundary) {
 		this (imgURL, 0, 0, margin, steps, xBoundary, yBoundary);
-		x= (int) (0.5 * xBoundary);
-		y= (int) (0.3 * yBoundary);
 	}
 
 	
@@ -60,7 +58,7 @@ public class Shape extends ImageIcon {
 		this.y = y;
 	}
 
-	public int getX() {
+	public double getX() {
 		return this.x;
 	}
 
@@ -78,7 +76,7 @@ public class Shape extends ImageIcon {
 	
 	// 하나의 점이 이 모양과 충돌하였는지 (모양의 margin 거리안에 있는지)를 판단하는 함수
 	public boolean collide (Point p2) {
-		Point p = new Point(this.x, (int)this.y);
+		Point p = new Point((int)this.x, (int)this.y);
 		if (p.distance(p2) <= margin) return true;
 		return false;
 	}
@@ -90,7 +88,7 @@ public class Shape extends ImageIcon {
 	// 해당 모양을 g에 출력해주는 메소드
 	public void draw(Graphics g, ImageObserver io) {
 		Image img = this.getImage();
-		((Graphics2D)g).drawImage(img, x, (int)y, img.getWidth(io)/2, img.getHeight(io)/2, io);
+		((Graphics2D)g).drawImage(img, (int)x, (int)y, img.getWidth(io)/2, img.getHeight(io)/2, io);
 	}
 
 	// 이 부분을 상속한 다양한 객체의 모션이 일어날 수 있도록 조정하기
