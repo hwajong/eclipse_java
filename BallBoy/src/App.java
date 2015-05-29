@@ -37,6 +37,8 @@ public class App {
 	JFrame mainFrame = new JFrame(); // 전체 GUI를 담을 프레임
 	JPanel controlPanel = new JPanel(); // 게임 컨트롤이 들어갈 패널
 	
+	JFrame scoreFrame = new JFrame();
+	
 	JPanel coverPanel; // 초기화면이 나타날 패널
 	JPanel menualPanel; // 초기화면이 나타날 패널
 	
@@ -48,6 +50,7 @@ public class App {
 	
 	int score = 0;
 	int level = 0;
+	double fps = 0;
 	
 	// 버튼 토글을 위한 비트 연산에 사용될 상수들
 	private final int START = 1;
@@ -65,7 +68,8 @@ public class App {
 	Timer timerClock; // 초단위 타이머 
 	
 	StringShape levelShape = new StringShape("LV: 0", 10, 20);
-	StringShape scoreShape = new StringShape("Score: 0", 300, 20);
+	StringShape scoreShape = new StringShape("Score: 0", 290, 20);
+	StringShape fpsShape = new StringShape("FPS: 0", 550, 20);
 	List<Shape> ballList = new ArrayList<Shape>(); // 공객체 
 	Shape player; // 키보드로 움직이는 Player 객체
 	
@@ -92,7 +96,7 @@ public class App {
 		gamePanel.setBounds(0, 0, WIN_WIDTH, WIN_HEIGHT);
 		
 		rankPanel = new RankPanel();
-		rankPanel.setBounds(0, 0, WIN_WIDTH, WIN_HEIGHT);
+		rankPanel.setBounds(0, 0, WIN_WIDTH, WIN_HEIGHT - 50);
 		
 		coverPanel = new coverPanel();
 		coverPanel.setBounds(0, 0, WIN_WIDTH, WIN_HEIGHT);
@@ -103,10 +107,9 @@ public class App {
 		lp.add(coverPanel, new Integer(0));
 		lp.add(menualPanel, new Integer(0));
 		lp.add(gamePanel, new Integer(0));
-		lp.add(rankPanel, new Integer(0));
 		
 		timerClock = new Timer(1000, new ClockListner());
-		timerAnim = new Timer(10, new AnimeListener()); // 그림의 이동을 처리하기 위한 리스너
+		timerAnim = new Timer(1, new AnimeListener()); // 그림의 이동을 처리하기 위한 리스너
 		
 		
 		player = new Shape(getClass().getResource("player.png"), gamePanelWidth, gamePanelHeight);		
@@ -139,6 +142,11 @@ public class App {
 		mainFrame.setSize(WIN_WIDTH, WIN_HEIGHT);
 		mainFrame.setVisible(true);
 		
+		scoreFrame.add(BorderLayout.CENTER, rankPanel);
+		scoreFrame.setSize(WIN_WIDTH, WIN_HEIGHT - 50);
+		scoreFrame.setVisible(false);
+
+		
 		// 게임이 이루어질 패널의 실제 폭과 넓이 계산
 		gamePanelWidth = gamePanel.getWidth();
 		gamePanelHeight = gamePanel.getHeight();
@@ -152,18 +160,29 @@ public class App {
 	// 게임이 진행되는 메인 패널
 	@SuppressWarnings("serial")
 	class GamePanel extends JPanel {
+		
+		int count = 0;
+		
 		public void paintComponent(Graphics g) {
+			
 			g.setColor(Color.white);
 			g.fillRect(0, 0, this.getWidth(), this.getHeight()); // 화면 지우기
 
 			player.draw(g, this);
-			
+
 			for (Shape s : ballList) {
 				s.draw(g, this);
 			}
-			
+
 			levelShape.draw(g);
 			scoreShape.draw(g);
+			
+			if(++count > 50) {
+				count = 0;
+				fpsShape.setString(String.format("FPS: %5.2f", fps));
+			}
+			
+			fpsShape.draw(g);
 		}
 	}
 	
@@ -217,11 +236,6 @@ public class App {
 			g.setColor(Color.white);
 			g.fillRect(0, 0, this.getWidth(), this.getHeight()); // 화면 지우기
 
-			player.draw(g, this);
-						
-			levelShape.draw(g);
-			scoreShape.draw(g);
-			
 			g.setFont(new Font("TimesRoman", Font.BOLD, 40));
 		    g.setColor(Color.black);
 		    int x = 100;
@@ -278,7 +292,6 @@ public class App {
 		timerClock.stop(); // 시간 디스플에이 멈춤
 		timerAnim.stop(); // 그림객체 움직임 멈춤
 		gamePanel.setFocusable(false); // 포커싱 안되게 함(즉 키 안먹음)
-		buttonOn(START);
 		
 		try {
 			Thread.sleep(3000);
@@ -287,17 +300,15 @@ public class App {
 		}
 		
 		rankPanel.bid(true);
-		lp.moveToFront(rankPanel);
-		buttonOn(MANUAL);
+		scoreFrame.setVisible(true);
+		buttonOn(MANUAL+START+RANK);
 	}
 
 
 	// 시작 버튼의 감청자
 	class StartListener implements ActionListener {
 		public void actionPerformed(ActionEvent e) {
-			buttonOff(RANK);
 			lp.moveToFront(gamePanel);
-			gamePanel.setDoubleBuffered(true);
 			gamePanel.setFocusable(true); // gamePanel이 포커싱될 수 있게 함
 			gamePanel.requestFocus(); // 포커싱을 맞춰줌(이것 반드시 필요)
 			
@@ -313,7 +324,7 @@ public class App {
 			timerClock.start();
 			timerAnim.start(); // 그림객체 움직임을 위한 시작
 
-			buttonOff(MANUAL+START); // 활성화된 버튼의 조정
+			buttonOff(MANUAL+START+RANK); // 활성화된 버튼의 조정
 			tfUserId.setEnabled(false);
 			
 			mainFrame.repaint(); // 화면을 다시 디스플레이 되게 함
@@ -331,7 +342,8 @@ public class App {
 	class RankListener implements ActionListener {
 		public void actionPerformed(ActionEvent e) {
 			rankPanel.bid(false);
-			lp.moveToFront(rankPanel);
+			scoreFrame.setVisible(true);
+			scoreFrame.setLocation(100, 100);
 		}
 	}
 	
@@ -358,37 +370,50 @@ public class App {
 	// goAnime 타이머에 의해 주기적으로 실행될 내용
 	// 객체의 움직임, 충돌의 논리를 구현
 	private class AnimeListener implements ActionListener {
+		
+		double tickLast = System.currentTimeMillis();
+		
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			
-			// 만약 충돌하였으면 충돌의 효과음 나타내고 타이머를 중단시킴
-			for (Shape s : ballList) {
-				if (s.collide(new Point((int)player.x, (int)player.y))) {
-					boomSound.play(); // 충돌의 음향
-					finishGame(); // 게임 중단
-					return;
-				}
-			}
+			double tickCurr = System.currentTimeMillis();
+			double tickDiff = tickCurr - tickLast;
 
-			// 그림 객체들을 이동시킴
-			for (Shape s : ballList) {
-				s.move();
-			}
-			
-			// 점수 계산
-			int x_min = (int)(player.getX() - 10);
-			if(x_min < 0) x_min = 0;
-			int x_max = (int)(player.getX() + 10);
-			if(x_max > WIN_WIDTH) x_max = WIN_WIDTH;
-			for (Shape s : ballList) {
-				if(s.getX() >= x_min && s.getX() <= x_max) {
-					score += 10;
-					scoreShape.setString("Score: " + score);
+			fps = 1000 / tickDiff;
+
+			if(fps <= 100) {
+				tickLast = tickCurr;
+				// System.out.println("FPS : " + fps);
+
+				// 만약 충돌하였으면 충돌의 효과음 나타내고 타이머를 중단시킴
+				for (Shape s : ballList) {
+					if (s.collide(new Point((int)player.x, (int)player.y))) {
+						boomSound.play(); // 충돌의 음향
+						finishGame(); // 게임 중단
+						return;
+					}
 				}
+
+				// 그림 객체들을 이동시킴
+				for (Shape s : ballList) {
+					s.move();
+				}
+				
+				// 점수 계산
+				int x_min = (int)(player.getX() - 10);
+				if(x_min < 0) x_min = 0;
+				int x_max = (int)(player.getX() + 10);
+				if(x_max > WIN_WIDTH) x_max = WIN_WIDTH;
+				for (Shape s : ballList) {
+					if(s.getX() >= x_min && s.getX() <= x_max) {
+						score += 10;
+						scoreShape.setString("Score: " + score);
+					}
+				}
+							
+				// System.out.println("event");
+				mainFrame.repaint();
 			}
-						
-			// System.out.println("event");
-			mainFrame.repaint();
 		}
 	}
 	
